@@ -17,8 +17,12 @@ from django.contrib import admin
 from django.urls import path
 
 import myapp.views
+import myapp.bookCrawling
+import myapp.product
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('',myapp.views.home, name='home')
+    path('',myapp.views.home, name='home'),
+    path('book/<int:url>',myapp.bookCrawling.bookCrawling, name = 'book'),
+    path('pro/<int:url>',myapp.product.product, name = 'product')
 ]
