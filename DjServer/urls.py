@@ -24,5 +24,5 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('',myapp.views.home, name='home'),
     path('book/<int:url>',myapp.bookCrawling.bookCrawling, name = 'book'),
-    path('pro/<int:url>',myapp.product.product, name = 'product')
+    path('pro/<int:Barcode>',myapp.product.product, name = 'product')
 ]

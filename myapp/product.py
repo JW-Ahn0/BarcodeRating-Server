@@ -7,7 +7,7 @@ from bs4 import BeautifulSoup as bf
 
 def return_name(barcode):
     koreanet = "http://www.koreannet.or.kr/home/hpisSrchGtin.gs1?gtin=" #코리안넷 주소
-    koreanet += barcode
+    koreanet += str(barcode)
     req = rq.get(koreanet) #http로 html 가져옴
     raw = req.text
     html = bf(raw, 'html.parser')  # string을 html 양식으로 parsing
@@ -60,7 +60,7 @@ def search_naver(name, sortFlag):
         return naver_shopping,score,review
 
 
-    if count ==List.__len__() and sortFlag is not 1:
+    if count ==List.__len__() and sortFlag != 1:
         return search_naver(name,1)
 
     return naver_shopping,score,review
@@ -79,7 +79,7 @@ def hello_world():
 
 def product(requests, Barcode):
     if Barcode is not None:
-          title, imgUrl = return_name(Barcode)
+          title, imgUrl = return_name(str(Barcode))
           link , score , review = search_naver(title, 0)
           total = review * score
           d = {
@@ -95,7 +95,7 @@ def product(requests, Barcode):
                   "title":title,
                   "total":total
           }
-          return JsonResponse(d)
+          return JsonResponse(d, safe=False, json_dumps_params={'ensure_ascii': False})
     else :
           return "항목이 존재하지 않습니다."
 

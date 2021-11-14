@@ -46,4 +46,4 @@ def bookCrawling(request, url):
         "kb" : [str(kb_star), str(kb_star_num)],
         "yes": [str(yes_star), str(yes_star_num)]
     })
-    return JsonResponse(data)
+    return JsonResponse(data, safe=False, json_dumps_params={'ensure_ascii': False})
