@@ -26,5 +26,5 @@ urlpatterns = [
     path('',myapp.views.home, name='home'),
     path('book/<int:url>',myapp.bookCrawling.bookCrawling, name = 'book'),
     path('pro/<int:Barcode>',myapp.product.product, name = 'product'),
-    path('db/',myapp.dbconnet.mysql_scan,name = "db")
+    path('db/',myapp.dbconnet.start,name = "db")
 ]
