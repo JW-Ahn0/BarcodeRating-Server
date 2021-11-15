@@ -4,9 +4,6 @@ from bs4 import BeautifulSoup
 import time
 
 def start(request):
-    mysql_cate_1st()
-    mysql_cate_2st()
-    mysql_cate_3st()
     mysql_ssg_search()
 
 
@@ -308,6 +305,7 @@ def mysql_ssg_search():
             else:
                 length = (int)(str(food_length).split('changePage(')[1].split(')')[0])
 
+            set_name_list = set()
             # 각 page 마다 단어 긁어오기
             for page in range(1, length + 1):
 
@@ -327,11 +325,15 @@ def mysql_ssg_search():
                     trash = ['', 'x', ' ', '!', 'X', '+', '~', '-','/']
                     for name in name_list:
                         if name not in trash:
-                            sql = "INSERT IGNORE INTO food_name (name , food_3st_id ) VALUES ( %s , %s )"
-                            val = (name, food_id)
-                            mysql_cursor.execute(sql, val)
+                            set_name_list.add(name)
 
-                    mysql_con.commit()
+
+
+            sql = "INSERT INTO food_name (name , food_3st_id ) VALUES ( %s , %s )"
+            for name in set_name_list:
+                val = (name, food_id)
+                mysql_cursor.execute(sql, val)
+            mysql_con.commit()
 
         # life_3st에서 긁어오기
         sql = "SELECT * FROM life_3st"
@@ -365,6 +367,7 @@ def mysql_ssg_search():
             else:
                 length = (int)(str(life_length).split('changePage(')[1].split(')')[0])
 
+            set_name_list = set()
             # 각 page 마다 단어 긁어오기
             for page in range(1, length + 1):
 
@@ -384,13 +387,14 @@ def mysql_ssg_search():
                     trash = ['', 'x', ' ', '!', 'X', '+', '~', '-', '/']
                     for name in name_list:
                         if name not in trash:
-                            sql = "INSERT IGNORE INTO life_name (name , life_3st_id ) VALUES ( %s , %s )"
-                            val = (name, life_id)
-                            mysql_cursor.execute(sql, val)
-
-                    mysql_con.commit()
+                            set_name_list.add(name)
 
 
+            sql = "INSERT INTO life_name (name , life_3st_id ) VALUES ( %s , %s )"
+            for name in set_name_list:
+                val = (name, life_id)
+                mysql_cursor.execute(sql, val)
+            mysql_con.commit()
 
 
     finally:
