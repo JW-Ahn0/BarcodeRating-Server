@@ -1,43 +1,157 @@
-# -*- coding: utf-8 -*-
 import requests as rq
-from django.http import JsonResponse
 from bs4 import BeautifulSoup as bf
+from django.http import JsonResponse
+import urllib.request
+import mysql.connector
+import re
 
-#dd
+def pro_start(barcode) :
+    re = search_ko(barcode)
+    if re == "no" :
+        d = {
+            "type": 'not in k-net',
+            "img_Url": "",
+            "List": [
+                {
+                    "link": "",
+                    "name": "",
+                    "review": "",
+                    "score": ""
+                },
+            ],
+            "title": "",
+            "total_score": "",
+            "total_review": ""
+        }
+        return JsonResponse(d, safe=False, json_dumps_params={'ensure_ascii': False})
+    js = product(re)
+    return js
 
-def return_name(barcode):
-    koreanet = "http://www.koreannet.or.kr/home/hpisSrchGtin.gs1?gtin=" #코리안넷 주소
-    koreanet += str(barcode)
-    req = rq.get(koreanet) #http로 html 가져옴
-    raw = req.text
-    html = bf(raw, 'html.parser')  # string을 html 양식으로 parsing
-    try:
-        info_name = html.select('div.productTit')
-        info_image = html.select('div.imgArea')  # &amp; 걸러주는 작업해야됨 이미지쪽임1
-    except Exception as e:
-        print(e)
-        return "코리안넷에 등록된 상품이 아닙니다.","null"
-    info_str = ""
-    for x in info_name:
-        info_str += str(x)
 
-    info_img =""
-    for x in info_image[0].select('img')[0]['src']:
-        info_img += str(x)
+def search_name(real_name) :
 
-    info_str = info_str[50:-13] # 이름만 가져오기 위해. 16번째 문자부터 끝까지 가져옴.
-    return info_str,info_img
+    mysql_con = None
+    mysql_con = mysql.connector.connect(host='localhost', port='3306', database='category', user='root', password='1234')
+    mysql_cursor = mysql_con.cursor(dictionary=True)
 
-def search_naver(name, sortFlag):
+    sql_food = "SELECT * FROM food_name WHERE name = %s"
+    sql_life = "SELECT * FROM life_name WHERE name = %s"
 
-    if name =="코리안넷에 등록된 상품이 아닙니다.":
-        return "코리안넷에 등록된 상품이 아닙니다."
-    print("입력된값:"+name)
+    name_list = real_name.split(' ')
+
+    final_what = ''
+    final_id = ''
+    final_name = ''
+
+    full_name = [""] * 635
+    for name_list2 in name_list :
+        name_list3 = name_list2.split('_')
+        for name in name_list3 :
+            mysql_cursor.execute(sql_food, (name, ))
+            mysql_list = mysql_cursor.fetchall()
+            mysql_cursor = mysql_con.cursor(dictionary=True)
+
+            if mysql_list == [] :
+                continue
+            else :
+                for now_name in mysql_list:
+                    now_id = now_name['food_3st_id']
+                    full_name[now_id] = full_name[now_id] + now_name['name'] + ' '
+
+
+
+    for i in range(1, 634) :
+        if len(full_name[i]) > len(final_name) :
+            final_name = full_name[i]
+            final_id = i
+            final_what = 'food'
+
+
+
+    full_name = [""] * 1105
+    for name_list2 in name_list:
+        name_list3 = name_list2.split('_')
+        for name in name_list3:
+            mysql_cursor.execute(sql_life, (name, ))
+            mysql_list = mysql_cursor.fetchall()
+            mysql_cursor = mysql_con.cursor(dictionary=True)
+
+            if mysql_list == []:
+                continue
+            else:
+
+                for now_name in mysql_list:
+                    now_id = now_name['life_3st_id']
+                    full_name[now_id] = full_name[now_id] + now_name['name'] + ' '
+
+
+
+    for i in range(1, 1103):
+        if len(full_name[i]) > len(final_name):
+            final_name = full_name[i]
+            final_id = i
+            final_what = 'life'
+
+    if final_what == 'food' :
+        sql = "SELECT * FROM food_3st WHERE id = %s"
+        mysql_cursor.execute(sql, (final_id, ))
+        mysql_list = mysql_cursor.fetchall()[0]
+
+        what = mysql_list['name']
+    else :
+        sql = "SELECT * FROM life_3st WHERE id = %s"
+        mysql_cursor.execute(sql, (final_id,))
+        mysql_list = mysql_cursor.fetchall()[0]
+
+        what = mysql_list['name']
+
+    mysql_con.close()
+    return final_name, what
+
+
+
+
+def search_ko(barcode) :
+
+    mysql_con = None
+    mysql_con = mysql.connector.connect(host='localhost', port='3306', database='final', user='root', password='1234')
+    mysql_cursor = mysql_con.cursor(dictionary=True)
+
+    sql = "SELECT * FROM final WHERE barcode = %s"
+    mysql_cursor.execute(sql, (barcode, ))
+    mysql_list = mysql_cursor.fetchall()
+    mysql_cursor = mysql_con.cursor(dictionary=True)
+    if mysql_list == [] :
+        bar_webpage = urllib.request.urlopen('http://www.koreannet.or.kr/home/hpisSrchGtin.gs1?gtin=' + str(barcode))
+        bar_soup = bf(bar_webpage, 'html.parser')
+
+
+        title = bar_soup.find('div', "productTit")
+
+        if title is None:
+            return "no"
+
+        stitle = str(title.get_text()).split(' ', 2)[2].split('\n')[0].split('\r')[0]
+        img_url = str(bar_soup.find('div', "imgArea")).split('src="')[1].split('"')[0]
+
+        name, what = search_name(stitle)
+
+        sql = "INSERT IGNORE INTO final (real_name, name , barcode , img_url, what) VALUES (%s ,%s, %s, %s, %s)"
+        var = (stitle, name , str(barcode), img_url, what)
+        mysql_cursor.execute(sql, var)
+        mysql_con.commit()
+        mysql_con.close()
+    else :
+        name = mysql_list[0]['name']
+    return name
+
+
+
+def search_naver(name,  sortflag):
     naver_shopping = "https://search.shopping.naver.com/search/all?query="
-    naver_shopping +=name
+    naver_shopping += name
     sort = "&sort=review&timestamp=&viewType=list"
-    
-    if sortFlag ==1:
+    if sortflag == 1:
         naver_shopping += sort
     req = rq.get(naver_shopping)
     raw = req.text
@@ -45,58 +159,196 @@ def search_naver(name, sortFlag):
     count = 0
     score = 0.0
     review = 0
-    try:
-        List = html.find_all('div',class_ ='basicList_info_area__17Xyo')
-        for item in List:
-            if item.find('span',class_ = 'basicList_graph__ZV6s9') is not None:
-                score = float(item.find('span',class_ = 'basicList_graph__ZV6s9').text[3:])
-                print(score)
-                review = int(item.find('a',class_='basicList_etc__2uAYO').find('em', class_='basicList_num__1yXM9').text.replace(",",""))
-                print(review)
-            else:
-                count += 1
-    except Exception as e:
-        print(e)
-        return naver_shopping,score,review
+    totalscore=0.0
+    totalreview=0
+    productlist = html.find_all('div', class_='basicList_info_area__17Xyo')
+    for item in productlist:
+        if item.find('span', class_='basicList_graph__ZV6s9') is not None:  # 항목에 별점이 존재하는 경우
+            score = float(item.find('span', class_='basicList_graph__ZV6s9').text[3:])
+            review = int(item.find('a', class_='basicList_etc__2uAYO').find('em',class_='basicList_num__1yXM9').text.replace(",", ""))
+            totalreview+=review
+            totalscore += (score * review)
+        else:
+            count += 1
+    if count == productlist.__len__() and sortflag != 1:  # 별점이 존재하는 항목이 1개도없는 경우 리뷰많은 순으로 다시 검색해서 리턴
+        return search_naver(name, 1)
+    if sortflag ==1 and count == productlist.__len__():
+        print("검색결과가 존재하지않습니다.")
+        return naver_shopping, totalscore, totalreview
+    if(totalreview != 0):
+        totalscore /=totalreview
+    totalscore = round(totalscore,2)
+    # 네이버 쇼핑링크, 별점, 리뷰 수 리턴
+    return naver_shopping, totalscore, totalreview
+def search_coupang(name):
+    headers = {
+        'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 11_0_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.82 Safari/537.36'
+    }
+    count = 0
+    score = 0.0
+    review = 0
+    totalscore=0.0
+    totalreview=0
+
+    coupang_shopping = "https://www.coupang.com/np/search?component=&q="
+    coupang_shopping += name
+    req = rq.get(coupang_shopping,headers=headers)
+    raw = req.text
+    html = bf(raw, 'html.parser')
+
+    productlist = html.find_all('li', class_='search-product')
+    for item in productlist:
+        if item.find('div', class_='rating-star') is not None:  # 항목에 별점이 존재하는 경우
+            score = float(item.find('em', class_='rating').text[:])
+            review = int( str(item.find('span', class_='rating-total-count').text[1:-1]).replace(',',"") )
+            totalreview += review
+            totalscore += (score * review)
+        else :
+            count += 1
+    if count == productlist.__len__():
+        print("검색결과가 존재하지않습니다.")
+        return coupang_shopping, totalscore, totalreview
+    if(totalreview != 0):
+        totalscore /=totalreview
+    totalscore = round(totalscore,2)
+    # 쿠팡 쇼핑링크, 별점, 리뷰 수 리턴
+    return coupang_shopping, totalscore, totalreview
+def search_auction(name):
+    count = 0
+    score = 0.0
+    review = 0
+    totalscore=0.0
+    totalreview=0
+
+    auction_shopping = "https://browse.auction.co.kr/search?keyword="
+    auction_shopping += name
+    auction_shopping += "&s=13" #리뷰많은순으로 추가
+    req = rq.get(auction_shopping)
+    raw = req.text
+    html = bf(raw, 'html.parser')
+    productlist = html.find_all('div', class_='component component--item_card type--general')
+
+    for item in productlist:
+        if item.find('li', class_='item awards') is not None:  # 항목에 별점이 존재하는 경우
+            score = float(item.find('li', class_='item awards').text[5:-2])
+            review = int( str(item.find('span', class_='text--reviewcnt').text[3:]).replace(',',"") )
+            totalreview += review
+            totalscore += (score * review)
+        else :
+            count += 1
+    if count == productlist.__len__():
+        print("검색결과가 존재하지않습니다.")
+        return auction_shopping, totalscore, totalreview
+
+    if(totalreview != 0):
+        totalscore /=totalreview
+    totalscore = round(totalscore,2)
+    # 옥션 쇼핑링크, 별점, 리뷰 수 리턴
+    return auction_shopping, totalscore, totalreview
+def search_gmarket(name):
+    count = 0
+    score = 0.0
+    review = 0
+    totalscore=0.0
+    totalreview=0
+
+    gmarket_shopping = "https://browse.gmarket.co.kr/search?keyword="
+    gmarket_shopping += name
+    gmarket_shopping += "&s=13" #리뷰많은순으로 추가
+    req = rq.get(gmarket_shopping)
+    raw = req.text
+    html = bf(raw, 'html.parser')
+
+    productlist = html.find_all('div', class_='box__component box__component-itemcard box__component-itemcard--general')
+    for item in productlist:
+        if item.find('span', class_='image__awards-points') is not None:  # 항목에 별점이 존재하는 경우
+            if item.find('li', class_='list-item list-item__feedback-count') is not None and item.find('span', class_='image__awards-points') is not None:
+                review = int ( str(item.find('li', class_='list-item list-item__feedback-count').find('span',class_='text').text[1:-1]).replace(',',"") )
+                score = float(re.sub(r'[^0-9]','',item.find('span', class_='image__awards-points').text[:])  )/20
+                totalscore += (score * review)
+                totalreview += review
+        else:
+            count += 1
+    if count == productlist.__len__():
+        print("검색결과가 존재하지않습니다.")
+        return gmarket_shopping, totalscore, totalreview
+
+    if (totalreview != 0):
+        totalscore /= totalreview
+    totalscore = round(totalscore, 2)
+    # 지마켓 쇼핑링크, 별점, 리뷰 수 리턴
+    return gmarket_shopping, totalscore, totalreview
 
 
-    if count ==List.__len__() and sortFlag != 1:
-        return search_naver(name,1)
+def product(name):
 
-    return naver_shopping,score,review
+    title = str(name)
 
-def hello_world():
-		d = { "title" : "입력된값:홈스타 강력세정 욕실용 900ml",
-					"img_Url" : "https://img1.daumcdn.net/thumb/R1280x0/?scode=mtistory2&fname=https%3A%2F%2Fblog.kakaocdn.net%2Fdn%2Fbhl9kC%2FbtqC3NJwQ04%2F0kyUm1mZ75YcqksFTwTaOK%2Fimg.png",
-						"total" : "177.777777",
-							"mall_List" : [
-							{"name" : "naver",
-							"score" : 4.8,
-							"review" : "1,887",
-							"link" : "https://search.shopping.naver.com/search/all?query=%ED%99%88%EC%8A%A4%ED%83%80%20%EA%B0%95%EB%A0%A5%EC%84%B8%EC%A0%95%20%EC%9A%95%EC%8B%A4%EC%9A%A9%20900ml&frm=NVSHATC&prevQuery=%ED%99%88%EC%8A%A4%ED%83%80%20%EA%B0%95%EB%A0%A5%EC%84%B8%EC%A0%95%20%EC%9A%95%EC%8B%A4%EC%9A%A9%20900ml&sort=review&timestamp=&viewType=list" } ],
-		}
-		return JsonResponse(d)
+    total_review = 0
+    total_score = 0.0
+    naver_link, naver_score, naver_review = search_naver(title, 0)
+    gmarket_link, gmarket_score,gmarket_review = search_gmarket(title)
+    auction_link, auction_score, auction_review = search_auction(title)
+    coupang_link, coupang_score, coupang_review = search_coupang(title)
 
-def product(requests, Barcode):
-    if Barcode is not None:
-          title, imgUrl = return_name(str(Barcode))
-          link , score , review = search_naver(title, 0)
-          total = review * score
-          d = {
-                  "img_Url":imgUrl,
-                  "mall_List" : [
-                  {
-                      "link":link,
-                      "name":"naver",
-                      "review":review,
-                      "score":score
-                  }
-                  ],
-                  "title":title,
-                  "total":total
-          }
-          return JsonResponse(d, safe=False, json_dumps_params={'ensure_ascii': False})
-    else :
-          return "항목이 존재하지 않습니다."
+    total_review = naver_review +  gmarket_review+  auction_review+ coupang_review
+    if total_review!=0:
+        total_score = round(((naver_score * naver_review + gmarket_score * gmarket_review + auction_score * auction_review + coupang_score * coupang_review) / total_review),2)
 
+    mysql_conr = None
+    mysql_con = mysql.connector.connect(host='localhost', port='3306', database='final', user='root', password='1234')
+    mysql_cursor = mysql_con.cursor(dictionary=True)
+
+    sql_bar = "SELECT * FROM final WHERE name = %s"
+    mysql_cursor.execute(sql_bar, (name, ))
+    mysql_bar = mysql_cursor.fetchall()[0]
+    mysql_cursor = mysql_con.cursor(dictionary=True)
+
+    real_name = mysql_bar['real_name']
+    barcode = mysql_bar['barcode']
+    img_url = mysql_bar['img_url']
+    what = mysql_bar['what']
+
+
+    sql = "INSERT IGNORE INTO pro_final (total_score, total_review, real_name, name , barcode , url, what , naver_url, naver_total, naver_review, coupang_url, coupang_total, coupang_review, auction_url, auction_total, auction_review, gmarket_url, gmarket_total, gmarket_review) VALUES (%s ,%s, %s, %s, %s, %s, %s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)"
+    var = (total_score, total_review,real_name, name, barcode, img_url, what, naver_link, naver_score,naver_review,coupang_link,coupang_score,coupang_review,auction_link,auction_score,auction_review,gmarket_link,gmarket_score,gmarket_review)
+    mysql_cursor.execute(sql, var)
+    mysql_con.commit()
+
+    d = {
+        "type": 'product',
+        "img_Url": img_url,
+        "List": [
+            {
+                "link": naver_link,
+                "name": "naver",
+                "review": naver_review,
+                "score": naver_score
+            },
+            {
+                "link": gmarket_link,
+                "name": "gmarket",
+                "review": gmarket_review,
+                "score": gmarket_score
+            },
+            {
+                "link": auction_link,
+                "name": "auction",
+                "review": auction_review,
+                "score": auction_score
+            },
+            {
+                "link": coupang_link,
+                "name": "coupang",
+                "review": coupang_review,
+                "score": coupang_score
+            },
+
+        ],
+        "title": real_name,
+        "total_score": total_score,
+        "total_review" : total_review
+    }
+
+    return JsonResponse(d, safe=False, json_dumps_params={'ensure_ascii': False})
 

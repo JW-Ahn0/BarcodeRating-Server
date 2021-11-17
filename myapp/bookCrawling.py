@@ -1,16 +1,16 @@
-
 from bs4 import BeautifulSoup
 from django.http import JsonResponse
 import urllib.request
-#-*-coding:utf-8 -*-
+import mysql.connector
 
 
-def bookCrawling(request, url):
-    #url = 9791162540640
+def bookCrawling(url):
 
+    kb_url = 'https://www.kyobobook.co.kr/product/detailViewKor.laf?mallGb=KOR&ejkGb=KOR&barcode='+str(url)
+    yes_url = 'http://www.yes24.com/searchcorner/Search?keywordAd=&keyword=&domain=ALL&qdomain=%C0%FC%C3%BC&Wcode=001_005&query='+str(url)
     #검색후 상세페이지
-    kb_webpage = urllib.request.urlopen('https://www.kyobobook.co.kr/product/detailViewKor.laf?mallGb=KOR&ejkGb=KOR&barcode='+str(url))
-    yes_webpage = urllib.request.urlopen('http://www.yes24.com/searchcorner/Search?keywordAd=&keyword=&domain=ALL&qdomain=%C0%FC%C3%BC&Wcode=001_005&query='+str(url))
+    kb_webpage = urllib.request.urlopen(kb_url)
+    yes_webpage = urllib.request.urlopen(yes_url)
 
     kb_soup = BeautifulSoup(kb_webpage, 'html.parser')
     yes_soup = BeautifulSoup(yes_webpage, 'html.parser')
@@ -29,21 +29,54 @@ def bookCrawling(request, url):
     kb_star = (float)(kb_soup.find('div', "popup_load").find('em').get_text())
 
     #교보리뷰수
-    kb_star_num = (int)(str(kb_soup.find('div',"popup_load").get_text()).split('(리뷰 ')[1].split('개')[0])
+    kb_star_num = (int)(str(kb_soup.find('div',"popup_load").get_text()).split('(리뷰 ')[1].split('개')[0].replace(',',""))
 
     #yes24별점
     yes_star = (float)(yes_soup.find('div', "info_row info_rating").find('em', "yes_b").get_text())
     #yes24리뷰수
-    yes_star_num = (int)(yes_soup.find('div', "info_row info_rating").find('em', "txC_blue").get_text())
+    yes_star_num = (int)(yes_soup.find('div', "info_row info_rating").find('em', "txC_blue").get_text().replace(',',""))
+
+    total_review = kb_star_num+yes_star_num
+    total_score = round((kb_star_num*kb_star + yes_star_num*yes_star) / total_review , 2)
+
+    mysql_conr = None
+    mysql_con = mysql.connector.connect(host='localhost', port='3306', database='final', user='root', password='1234')
+    mysql_cursor = mysql_con.cursor(dictionary=True)
+
+    title = title.get_text().replace('\n','').replace('\r','').replace('\t','')
+
+    sql = "INSERT IGNORE INTO final (real_name, name, barcode, img_url, what) VALUES (%s,%s,%s,%s,%s)"
+    var = (title, title, url, finalimage[0], 'book')
+    mysql_cursor.execute(sql, var)
+
+    sql = "INSERT IGNORE INTO book_final (barcode, name, url,total_score, total_review, kb_url, yes_url, kb_total, yes_total, kb_review, yes_review) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)"
+    var = (url, title, finalimage[0],total_score,total_review, kb_url, yes_url, kb_star, yes_star, kb_star_num, yes_star_num)
+    mysql_cursor.execute(sql, var)
+
+    mysql_con.commit()
+    mysql_con.close()
 
     #기본 json
-    data = {}
-    data['book'] = []
-    data['book'].append({
-        "title": title.get_text(),
-        "img_url": finalimage[0],
-        "total" : str((kb_star_num*kb_star + yes_star_num*yes_star) / (kb_star_num+yes_star_num)),
-        "kb" : [str(kb_star), str(kb_star_num)],
-        "yes": [str(yes_star), str(yes_star_num)]
-    })
-    return JsonResponse(data, safe=False, json_dumps_params={'ensure_ascii': False})
+    d = {
+        "type": 'book',
+        "img_Url": finalimage[0],
+        "List": [
+            {
+                "link": kb_url,
+                "name": "kyobo",
+                "review": kb_star_num,
+                "score": kb_star
+            },
+            {
+                "link": yes_url,
+                "name": "yes24",
+                "review": yes_star_num,
+                "score": yes_star
+            },
+        ],
+        "title": title,
+        "total_score": total_score,
+        "total_review": total_review
+    }
+
+    return JsonResponse(d, safe=False, json_dumps_params={'ensure_ascii': False})

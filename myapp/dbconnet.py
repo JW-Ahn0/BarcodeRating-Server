@@ -6,7 +6,6 @@ import time
 def start(request):
     mysql_ssg_search()
 
-
 def mysql_cate_1st():
     try:
         mysql_con = None
@@ -274,6 +273,7 @@ def mysql_ssg_search():
 
         mysql_cursor = mysql_con.cursor(prepared=True)
 
+        """
         # food_3st에서 긁어오기
         sql = "SELECT * FROM food_3st"
         mysql_cursor.execute(sql)
@@ -288,9 +288,11 @@ def mysql_ssg_search():
         for now_category in mysql_food_3st:
             food_id = now_category[id]
             food_category = now_category[category]
+            if food_id < 364:
+                continue
 
-            ssg = urllib.request.urlopen("http://emart.ssg.com/category/main.ssg?dispCtgId=" + str(
-                food_category) + "&pageSize=100" + "&page=" + str(1))
+
+            ssg = urllib.request.urlopen("http://emart.ssg.com/category/main.ssg?dispCtgId=" + str(food_category) + "&pageSize=100" + "&page=" + str(1))
             ssg_soup = BeautifulSoup(ssg, 'html.parser')
 
             # ssg가 3초 이내면 막아버림
@@ -334,7 +336,8 @@ def mysql_ssg_search():
                 val = (name, food_id)
                 mysql_cursor.execute(sql, val)
             mysql_con.commit()
-
+            
+        """
         # life_3st에서 긁어오기
         sql = "SELECT * FROM life_3st"
         mysql_cursor.execute(sql)
@@ -351,15 +354,20 @@ def mysql_ssg_search():
             life_id = now_category[id]
             life_category = now_category[category]
 
-            ssg = urllib.request.urlopen("http://emart.ssg.com/category/main.ssg?dispCtgId=" + str(
-                life_category) + "&pageSize=100" + "&page=" + str(1))
+            if life_id < 78:
+                continue
+
+            ssg = urllib.request.urlopen("http://emart.ssg.com/category/main.ssg?dispCtgId=" + str(life_category) + "&pageSize=100" + "&page=" + str(1))
             ssg_soup = BeautifulSoup(ssg, 'html.parser')
 
             # ssg가 3초 이내면 막아버림
             time.sleep(3)
 
             # 전체 page 개수
-            life_length = ssg_soup.find('div', 'com_paginate notranslate').find('a', 'btn_last on')
+            life_length = ssg_soup.find('div', 'com_paginate notranslate')
+            if life_length is None:
+                continue
+            life_length = life_length.find('a', 'btn_last on')
             if life_length is None:
                 length_final = ssg_soup.find('div', 'com_paginate notranslate')
                 length = (int)(str(length_final).count('changePage(')) + 1
