@@ -8,22 +8,7 @@ import re
 def pro_start(barcode) :
     re = search_ko(barcode)
     if re == "no" :
-        d = {
-            "type": 'not in k-net',
-            "img_Url": "",
-            "List": [
-                {
-                    "link": "",
-                    "name": "",
-                    "review": "",
-                    "score": ""
-                },
-            ],
-            "title": "",
-            "total_score": "",
-            "total_review": ""
-        }
-        return JsonResponse(d, safe=False, json_dumps_params={'ensure_ascii': False})
+        return "no"
     js = product(re)
     return js
 

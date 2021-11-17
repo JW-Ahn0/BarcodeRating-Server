@@ -29,6 +29,24 @@ def search_db(request, bar):
             else :
                 js = myapp.product.pro_start(str(bar))
 
+            if js == "no":
+                d = {
+                    "type": 'barcode wrong or not in k-net',
+                    "img_Url": "",
+                    "List": [
+                        {
+                            "link": "",
+                            "name": "",
+                            "review": "",
+                            "score": ""
+                        },
+                    ],
+                    "title": "",
+                    "total_score": "",
+                    "total_review": ""
+                }
+                return JsonResponse(d, safe=False, json_dumps_params={'ensure_ascii': False})
+
             return js;
         #내 db에 있으면
         else :

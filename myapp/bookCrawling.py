@@ -17,6 +17,9 @@ def bookCrawling(url):
 
     #교보에서 제목뽑기
     titlesoup = kb_soup.find('h1', "title")
+
+    if titlesoup is None :
+        return "no"
     title = titlesoup.find('strong')
 
     #교보에서 img뽑기

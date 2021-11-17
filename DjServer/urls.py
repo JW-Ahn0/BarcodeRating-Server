@@ -19,10 +19,12 @@ from django.urls import path
 import myapp.views
 import myapp.bookCrawling
 import myapp.search
+import myapp.dbconnet
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('',myapp.views.home, name='home'),
     path('book/<int:url>',myapp.bookCrawling.bookCrawling, name = 'book'),
-    path('sr/<int:bar>',myapp.search.search_db,name = "sr")
+    path('sr/<int:bar>',myapp.search.search_db,name = "sr"),
+    path('db/', myapp.dbconnet.start, name = 'db')
 ]
