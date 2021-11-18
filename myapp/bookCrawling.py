@@ -60,7 +60,7 @@ def bookCrawling(url):
     mysql_con.close()
 
     #기본 json
-    d = {
+    d = [{
         "type": 'book',
         "img_Url": finalimage[0],
         "List": [
@@ -80,6 +80,6 @@ def bookCrawling(url):
         "title": title,
         "total_score": total_score,
         "total_review": total_review
-    }
+    }]
 
     return JsonResponse(d, safe=False, json_dumps_params={'ensure_ascii': False})

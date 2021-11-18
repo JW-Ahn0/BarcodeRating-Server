@@ -25,12 +25,91 @@ def search_db(request, bar):
             #책이냐
             if str(bar)[0:3] == "978" or str(bar)[0:2] == "979" :
                 js = myapp.bookCrawling.bookCrawling(str(bar))
+                return JsonResponse(js, safe=False, json_dumps_params={'ensure_ascii': False})
             #아니냐
             else :
+                f_d = []
                 js = myapp.product.pro_start(str(bar))
+                f_d.append(js)
+
+                sql = "SELECT * FROM pro_final WHERE barcode = %s;"
+                mysql_cursor.execute(sql, (bar,))
+                mysql_list = mysql_cursor.fetchall()[0]
+                mysql_cursor = mysql_con.cursor(dictionary=True)
+
+                what = mysql_list['what']
+
+                sql = "SELECT * FROM pro_final WHERE what = %s;"
+                mysql_cursor.execute(sql, (what,))
+                mysql_list = mysql_cursor.fetchall()
+
+                for now_list in mysql_list:
+                    if (now_list['barcode'] == bar):
+                        continue
+                    else:
+
+                        img_url = now_list['url']
+                        real_name = now_list['real_name']
+                        total_score = now_list['total_score']
+                        total_review = now_list['total_review']
+
+                        naver_link = now_list['naver_url']
+                        naver_review = now_list['naver_review']
+                        naver_score = now_list['naver_total']
+
+                        auction_link = now_list['auction_url']
+                        auction_review = now_list['auction_review']
+                        auction_score = now_list['auction_total']
+
+                        gmarket_link = now_list['gmarket_url']
+                        gmarket_review = now_list['gmarket_review']
+                        gmarket_score = now_list['gmarket_total']
+
+                        coupang_link = now_list['coupang_url']
+                        coupang_review = now_list['coupang_review']
+                        coupang_score = now_list['coupang_total']
+
+                        d = {
+                            "type": 'product',
+                            "img_Url": img_url,
+                            "List": [
+                                {
+                                    "link": naver_link,
+                                    "name": "naver",
+                                    "review": naver_review,
+                                    "score": naver_score
+                                },
+                                {
+                                    "link": gmarket_link,
+                                    "name": "gmarket",
+                                    "review": gmarket_review,
+                                    "score": gmarket_score
+                                },
+                                {
+                                    "link": auction_link,
+                                    "name": "auction",
+                                    "review": auction_review,
+                                    "score": auction_score
+                                },
+                                {
+                                    "link": coupang_link,
+                                    "name": "coupang",
+                                    "review": coupang_review,
+                                    "score": coupang_score
+                                },
+
+                            ],
+                            "title": real_name,
+                            "total_score": total_score,
+                            "total_review": total_review
+                        }
+                        f_d.append(d)
+                return JsonResponse(f_d, safe=False, json_dumps_params={'ensure_ascii': False})
+
+
 
             if js == "no":
-                d = {
+                d = [{
                     "type": 'barcode wrong or not in k-net',
                     "img_Url": "",
                     "List": [
@@ -44,7 +123,7 @@ def search_db(request, bar):
                     "title": "",
                     "total_score": "",
                     "total_review": ""
-                }
+                }]
                 return JsonResponse(d, safe=False, json_dumps_params={'ensure_ascii': False})
 
             return js;
@@ -71,7 +150,7 @@ def search_db(request, bar):
                 yes_star_num = mysql_list['yes_review']
                 yes_star = mysql_list['yes_total']
 
-                d = {
+                d = [{
                     "type": 'book',
                     "img_Url": image,
                     "List": [
@@ -91,7 +170,9 @@ def search_db(request, bar):
                     "title": title,
                     "total_score": total_score,
                     "total_review": total_review
-                }
+                }]
+                mysql_con.close()
+
                 return JsonResponse(d, safe=False, json_dumps_params={'ensure_ascii': False})
 
 
@@ -99,11 +180,13 @@ def search_db(request, bar):
                 sql = "SELECT * FROM pro_final WHERE barcode = %s;"
                 mysql_cursor.execute(sql, (bar, ))
                 mysql_list = mysql_cursor.fetchall()[0]
+                mysql_cursor = mysql_con.cursor(dictionary=True)
 
                 img_url = mysql_list['url']
                 real_name = mysql_list['real_name']
                 total_score = mysql_list['total_score']
                 total_review = mysql_list['total_review']
+                what = mysql_list['what']
 
                 naver_link = mysql_list['naver_url']
                 naver_review = mysql_list['naver_review']
@@ -121,6 +204,7 @@ def search_db(request, bar):
                 coupang_review = mysql_list['coupang_review']
                 coupang_score = mysql_list['coupang_total']
 
+                f_d = []
                 d = {
                     "type": 'product',
                     "img_Url": img_url,
@@ -155,7 +239,79 @@ def search_db(request, bar):
                     "total_score": total_score,
                     "total_review": total_review
                 }
-                return JsonResponse(d, safe=False, json_dumps_params={'ensure_ascii': False})
+                f_d.append(d)
+
+                sql = "SELECT * FROM pro_final WHERE what = %s;"
+                mysql_cursor.execute(sql, (what,))
+                mysql_list = mysql_cursor.fetchall()
+
+                for now_list in mysql_list:
+                    if(now_list['barcode'] == bar):
+                        continue
+                    else :
+
+                        img_url = now_list['url']
+                        real_name = now_list['real_name']
+                        total_score = now_list['total_score']
+                        total_review = now_list['total_review']
+
+                        naver_link = now_list['naver_url']
+                        naver_review = now_list['naver_review']
+                        naver_score = now_list['naver_total']
+
+                        auction_link = now_list['auction_url']
+                        auction_review = now_list['auction_review']
+                        auction_score = now_list['auction_total']
+
+                        gmarket_link = now_list['gmarket_url']
+                        gmarket_review = now_list['gmarket_review']
+                        gmarket_score = now_list['gmarket_total']
+
+                        coupang_link = now_list['coupang_url']
+                        coupang_review = now_list['coupang_review']
+                        coupang_score = now_list['coupang_total']
+
+                        d = {
+                            "type": 'product',
+                            "img_Url": img_url,
+                            "List": [
+                                {
+                                    "link": naver_link,
+                                    "name": "naver",
+                                    "review": naver_review,
+                                    "score": naver_score
+                                },
+                                {
+                                    "link": gmarket_link,
+                                    "name": "gmarket",
+                                    "review": gmarket_review,
+                                    "score": gmarket_score
+                                },
+                                {
+                                    "link": auction_link,
+                                    "name": "auction",
+                                    "review": auction_review,
+                                    "score": auction_score
+                                },
+                                {
+                                    "link": coupang_link,
+                                    "name": "coupang",
+                                    "review": coupang_review,
+                                    "score": coupang_score
+                                },
+
+                            ],
+                            "title": real_name,
+                            "total_score": total_score,
+                            "total_review": total_review
+                        }
+                        f_d.append(d)
+
+
+
+                mysql_con.close()
+
+                return JsonResponse(f_d, safe=False, json_dumps_params={'ensure_ascii': False})
 
 
     finally:
