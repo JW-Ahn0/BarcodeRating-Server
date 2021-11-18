@@ -185,15 +185,19 @@ def search_coupang(name):
     img = str(html.find('img', 'search-product-wrap-img')).split('src="')[2].split('"')[0]
     img = "https:" + img
     productlist = html.find_all('li', class_='search-product')
+    check = 0
     for item in productlist:
         if item.find('div', class_='rating-star') is not None:  # 항목에 별점이 존재하는 경우
             score = float(item.find('em', class_='rating').text[:])
             review = int( str(item.find('span', class_='rating-total-count').text[1:-1]).replace(',',"") )
             totalreview += review
             totalscore += (score * review)
+            check = check + 1;
+            if check == 10:
+                break
         else :
             count += 1
-    if count == productlist.__len__():
+    if count == 10:
         print("검색결과가 존재하지않습니다.")
         return coupang_shopping, totalscore, totalreview
     if(totalreview != 0):
