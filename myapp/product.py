@@ -182,6 +182,7 @@ def search_coupang(name):
     raw = req.text
     html = bf(raw, 'html.parser')
 
+    img = str(html.find('img', 'search-product-wrap-img')).split('src="')[2].split('"')[0]
     productlist = html.find_all('li', class_='search-product')
     for item in productlist:
         if item.find('div', class_='rating-star') is not None:  # 항목에 별점이 존재하는 경우
@@ -198,7 +199,7 @@ def search_coupang(name):
         totalscore /=totalreview
     totalscore = round(totalscore,2)
     # 쿠팡 쇼핑링크, 별점, 리뷰 수 리턴
-    return coupang_shopping, totalscore, totalreview
+    return coupang_shopping, totalscore, totalreview, img
 def search_auction(name):
     count = 0
     score = 0.0
@@ -213,6 +214,8 @@ def search_auction(name):
     raw = req.text
     html = bf(raw, 'html.parser')
     productlist = html.find_all('div', class_='component component--item_card type--general')
+
+
 
     for item in productlist:
         if item.find('li', class_='item awards') is not None:  # 항목에 별점이 존재하는 경우
@@ -290,11 +293,19 @@ def product(real_name):
     naver_link, naver_score, naver_review = search_naver(title, 0)
     gmarket_link, gmarket_score,gmarket_review = search_gmarket(title)
     auction_link, auction_score, auction_review = search_auction(title)
-    coupang_link, coupang_score, coupang_review = search_coupang(title)
+    coupang_link, coupang_score, coupang_review, img = search_coupang(title)
 
     total_review = naver_review +  gmarket_review+  auction_review+ coupang_review
     if total_review!=0:
         total_score = round(((naver_score * naver_review + gmarket_score * gmarket_review + auction_score * auction_review + coupang_score * coupang_review) / total_review),2)
+
+
+    if(img_url == '/images/common/no_img.gif') :
+        img_url = img
+        sql = "UPDATE final SET img_url = %s where real_name = %s"
+        var = (img_url , real_name)
+        mysql_cursor.execute(sql, var)
+        mysql_con.commit()
 
 
     sql = "INSERT IGNORE INTO pro_final (total_score, total_review, real_name, name , barcode , url, what , naver_url, naver_total, naver_review, coupang_url, coupang_total, coupang_review, auction_url, auction_total, auction_review, gmarket_url, gmarket_total, gmarket_review) VALUES (%s ,%s, %s, %s, %s, %s, %s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)"
