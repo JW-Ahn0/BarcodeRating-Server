@@ -183,6 +183,7 @@ def search_coupang(name):
     html = bf(raw, 'html.parser')
 
     img = str(html.find('img', 'search-product-wrap-img')).split('src="')[2].split('"')[0]
+    img = "https:" + img
     productlist = html.find_all('li', class_='search-product')
     for item in productlist:
         if item.find('div', class_='rating-star') is not None:  # 항목에 별점이 존재하는 경우
