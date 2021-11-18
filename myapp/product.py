@@ -297,8 +297,6 @@ def product(real_name):
         total_score = round(((naver_score * naver_review + gmarket_score * gmarket_review + auction_score * auction_review + coupang_score * coupang_review) / total_review),2)
 
 
-
-
     sql = "INSERT IGNORE INTO pro_final (total_score, total_review, real_name, name , barcode , url, what , naver_url, naver_total, naver_review, coupang_url, coupang_total, coupang_review, auction_url, auction_total, auction_review, gmarket_url, gmarket_total, gmarket_review) VALUES (%s ,%s, %s, %s, %s, %s, %s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)"
     var = (total_score, total_review,real_name, name, barcode, img_url, what, naver_link, naver_score,naver_review,coupang_link,coupang_score,coupang_review,auction_link,auction_score,auction_review,gmarket_link,gmarket_score,gmarket_review)
     mysql_cursor.execute(sql, var)
@@ -338,6 +336,8 @@ def product(real_name):
         "total_score": total_score,
         "total_review" : total_review
     }
+
+    mysql_con.close()
 
     return JsonResponse(d, safe=False, json_dumps_params={'ensure_ascii': False})
 

@@ -51,7 +51,7 @@ def search_db(request, bar):
                 f_d.append(js)
 
                 sql = "SELECT * FROM pro_final WHERE barcode = %s;"
-                mysql_cursor.execute(sql, (bar,))
+                mysql_cursor.execute(sql, (str(bar),))
                 mysql_list = mysql_cursor.fetchall()[0]
                 mysql_cursor = mysql_con.cursor(dictionary=True)
 
@@ -136,7 +136,7 @@ def search_db(request, bar):
             if(what == 'book') :
 
                 sql = "SELECT * FROM book_final WHERE barcode = %s;"
-                mysql_cursor.execute(sql, (bar,))
+                mysql_cursor.execute(sql, (str(bar),))
                 mysql_list = mysql_cursor.fetchall()[0]
 
                 image = mysql_list['url']
@@ -180,7 +180,7 @@ def search_db(request, bar):
 
             else :
                 sql = "SELECT * FROM pro_final WHERE barcode = %s;"
-                mysql_cursor.execute(sql, (bar, ))
+                mysql_cursor.execute(sql, (str(bar), ))
                 mysql_list = mysql_cursor.fetchall()[0]
                 mysql_cursor = mysql_con.cursor(dictionary=True)
 
