@@ -339,5 +339,5 @@ def product(real_name):
 
     mysql_con.close()
 
-    return JsonResponse(d, safe=False, json_dumps_params={'ensure_ascii': False})
+    return d;
 

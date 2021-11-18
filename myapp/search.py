@@ -50,7 +50,12 @@ def search_db(request, bar):
                     return JsonResponse(d, safe=False, json_dumps_params={'ensure_ascii': False})
                 f_d.append(js)
 
-                sql = "SELECT * FROM pro_final WHERE barcode = %s;"
+                mysql_con = None
+                mysql_con = mysql.connector.connect(host='localhost', port='3306', database='final', user='root',
+                                                    password='1234')
+                mysql_cursor = mysql_con.cursor(dictionary=True)
+
+                sql = "SELECT * FROM final WHERE barcode = %s;"
                 mysql_cursor.execute(sql, (str(bar),))
                 mysql_list = mysql_cursor.fetchall()[0]
                 mysql_cursor = mysql_con.cursor(dictionary=True)
