@@ -23,7 +23,7 @@ def search_db(request, bar):
         if mysql_list == []:
 
             #책이냐
-            if str(bar)[0:3] == "978" or str(bar)[0:2] == "979" :
+            if str(bar)[0:3] == "978" or str(bar)[0:3] == "979" :
                 js = myapp.bookCrawling.bookCrawling(str(bar))
                 return JsonResponse(js, safe=False, json_dumps_params={'ensure_ascii': False})
             #아니냐
