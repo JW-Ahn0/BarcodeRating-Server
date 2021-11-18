@@ -126,8 +126,9 @@ def search_ko(barcode) :
         mysql_cursor.execute(sql, var)
         mysql_con.commit()
         mysql_con.close()
+        name = stitle
     else :
-        name = mysql_list[0]['name']
+        name = mysql_list[0]['real_name']
     return name
 
 
@@ -265,7 +266,22 @@ def search_gmarket(name):
     return gmarket_shopping, totalscore, totalreview
 
 
-def product(name):
+def product(real_name):
+
+    mysql_conr = None
+    mysql_con = mysql.connector.connect(host='localhost', port='3306', database='final', user='root', password='1234')
+    mysql_cursor = mysql_con.cursor(dictionary=True)
+
+    sql_bar = "SELECT * FROM final WHERE real_name = %s"
+    mysql_cursor.execute(sql_bar, (real_name,))
+    mysql_bar = mysql_cursor.fetchall()[0]
+    mysql_cursor = mysql_con.cursor(dictionary=True)
+
+    real_name = mysql_bar['real_name']
+    name = mysql_bar['name']
+    barcode = mysql_bar['barcode']
+    img_url = mysql_bar['img_url']
+    what = mysql_bar['what']
 
     title = str(name)
 
@@ -280,19 +296,7 @@ def product(name):
     if total_review!=0:
         total_score = round(((naver_score * naver_review + gmarket_score * gmarket_review + auction_score * auction_review + coupang_score * coupang_review) / total_review),2)
 
-    mysql_conr = None
-    mysql_con = mysql.connector.connect(host='localhost', port='3306', database='final', user='root', password='1234')
-    mysql_cursor = mysql_con.cursor(dictionary=True)
 
-    sql_bar = "SELECT * FROM final WHERE name = %s"
-    mysql_cursor.execute(sql_bar, (name, ))
-    mysql_bar = mysql_cursor.fetchall()[0]
-    mysql_cursor = mysql_con.cursor(dictionary=True)
-
-    real_name = mysql_bar['real_name']
-    barcode = mysql_bar['barcode']
-    img_url = mysql_bar['img_url']
-    what = mysql_bar['what']
 
 
     sql = "INSERT IGNORE INTO pro_final (total_score, total_review, real_name, name , barcode , url, what , naver_url, naver_total, naver_review, coupang_url, coupang_total, coupang_review, auction_url, auction_total, auction_review, gmarket_url, gmarket_total, gmarket_review) VALUES (%s ,%s, %s, %s, %s, %s, %s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)"
