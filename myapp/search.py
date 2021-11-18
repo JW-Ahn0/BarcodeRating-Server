@@ -30,6 +30,24 @@ def search_db(request, bar):
             else :
                 f_d = []
                 js = myapp.product.pro_start(str(bar))
+
+                if js == "no":
+                    d = [{
+                        "type": 'barcode wrong or not in k-net',
+                        "img_Url": "",
+                        "List": [
+                            {
+                                "link": "",
+                                "name": "",
+                                "review": "",
+                                "score": ""
+                            },
+                        ],
+                        "title": "",
+                        "total_score": "",
+                        "total_review": ""
+                    }]
+                    return JsonResponse(d, safe=False, json_dumps_params={'ensure_ascii': False})
                 f_d.append(js)
 
                 sql = "SELECT * FROM pro_final WHERE barcode = %s;"
@@ -108,23 +126,7 @@ def search_db(request, bar):
 
 
 
-            if js == "no":
-                d = [{
-                    "type": 'barcode wrong or not in k-net',
-                    "img_Url": "",
-                    "List": [
-                        {
-                            "link": "",
-                            "name": "",
-                            "review": "",
-                            "score": ""
-                        },
-                    ],
-                    "title": "",
-                    "total_score": "",
-                    "total_review": ""
-                }]
-                return JsonResponse(d, safe=False, json_dumps_params={'ensure_ascii': False})
+
 
             return js;
         #내 db에 있으면
