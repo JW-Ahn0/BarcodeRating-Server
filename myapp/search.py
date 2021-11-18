@@ -62,7 +62,7 @@ def search_db(request, bar):
                 mysql_list = mysql_cursor.fetchall()
 
                 for now_list in mysql_list:
-                    if (now_list['barcode'] == bar):
+                    if (now_list['barcode'] == str(bar)):
                         continue
                     else:
 
@@ -248,7 +248,7 @@ def search_db(request, bar):
                 mysql_list = mysql_cursor.fetchall()
 
                 for now_list in mysql_list:
-                    if(now_list['barcode'] == bar):
+                    if(now_list['barcode'] == str(bar)):
                         continue
                     else :
 
