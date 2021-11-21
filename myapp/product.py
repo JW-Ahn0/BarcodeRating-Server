@@ -25,7 +25,7 @@ def search_name(real_name) :
     name_list = real_name.split(' ')
 
     final_what = ''
-    final_id = ''
+    final_id = '1'
     final_name = ''
 
     full_name = [""] * 635
@@ -71,7 +71,7 @@ def search_name(real_name) :
 
 
 
-    for i in range(1, 1103):
+    for i in range(1, 1102):
         if len(full_name[i]) > len(final_name):
             final_name = full_name[i]
             final_id = i

@@ -29,18 +29,29 @@ def bookCrawling(url):
     finalimage = imurl[1].split('"')
 
     #교보별점
-    kb_star = (float)(kb_soup.find('div', "popup_load").find('em').get_text())
-
-    #교보리뷰수
-    kb_star_num = (int)(str(kb_soup.find('div',"popup_load").get_text()).split('(리뷰 ')[1].split('개')[0].replace(',',""))
+    kb_star = kb_soup.find('div', "popup_load").find('em')
+    if kb_star is None:
+        kb_star = 0
+        kb_star_num = 0
+    else :
+        kb_star = (float)(kb_star.get_text())
+        kb_star_num = (int)(str(kb_soup.find('div', "popup_load").get_text()).split('(리뷰 ')[1].split('개')[0].replace(',', ""))
 
     #yes24별점
-    yes_star = (float)(yes_soup.find('div', "info_row info_rating").find('em', "yes_b").get_text())
-    #yes24리뷰수
-    yes_star_num = (int)(yes_soup.find('div', "info_row info_rating").find('em', "txC_blue").get_text().replace(',',""))
+    yes_star = yes_soup.find('div', "info_row info_rating")
+
+    if yes_star is None:
+        yes_star = 0
+        yes_star_num = 0
+    else :
+        yes_star = (float)(yes_star.find('em', "yes_b").get_text())
+        yes_star_num = (int)(yes_soup.find('div', "info_row info_rating").find('em', "txC_blue").get_text().replace(',',""))
 
     total_review = kb_star_num+yes_star_num
-    total_score = round((kb_star_num*kb_star + yes_star_num*yes_star) / total_review , 2)
+    if total_review == 0:
+        total_score = 0
+    else :
+        total_score = round((kb_star_num*kb_star + yes_star_num*yes_star) / total_review , 2)
 
     mysql_conr = None
     mysql_con = mysql.connector.connect(host='localhost', port='3306', database='final', user='root', password='1234')
@@ -82,4 +93,4 @@ def bookCrawling(url):
         "total_review": total_review
     }]
 
-    return JsonResponse(d, safe=False, json_dumps_params={'ensure_ascii': False})
+    return d
