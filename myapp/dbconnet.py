@@ -354,11 +354,9 @@ def mysql_ssg_search():
             life_id = now_category[id]
             life_category = now_category[category]
 
-            if ( (life_id > 300) and (life_id < 309 )):
-                time.sleep(0.1)
-            else :
-                if life_id < 402:
-                    continue
+
+            if life_id < 691:
+                continue
 
             ssg = urllib.request.urlopen("http://emart.ssg.com/category/main.ssg?dispCtgId=" + str(life_category) + "&pageSize=100" + "&page=" + str(1))
             ssg_soup = BeautifulSoup(ssg, 'html.parser')
