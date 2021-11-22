@@ -19,8 +19,8 @@ def search_name(real_name) :
     mysql_con = mysql.connector.connect(host='localhost', port='3306', database='category', user='root', password='1234')
     mysql_cursor = mysql_con.cursor(dictionary=True)
 
-    sql_food = "SELECT * FROM food_name WHERE name = %s"
-    sql_life = "SELECT * FROM life_name WHERE name = %s"
+    sql_food = "SELECT * FROM food_name"
+    sql_life = "SELECT * FROM life_name"
 
     name_list = real_name.split(' ')
 
@@ -29,19 +29,27 @@ def search_name(real_name) :
     final_name = ''
 
     full_name = [""] * 635
+
+
     for name_list2 in name_list :
         name_list3 = name_list2.split('_')
         for name in name_list3 :
-            mysql_cursor.execute(sql_food, (name, ))
+            mysql_cursor.execute(sql_food)
             mysql_list = mysql_cursor.fetchall()
             mysql_cursor = mysql_con.cursor(dictionary=True)
 
-            if mysql_list == [] :
-                continue
-            else :
-                for now_name in mysql_list:
-                    now_id = now_name['food_3st_id']
-                    full_name[now_id] = full_name[now_id] + now_name['name'] + ' '
+            i = 1
+            big_name = ''
+            for now_name in mysql_list:
+                if(now_name['food_3st_id'] != i):
+                    i = i + 1;
+                    full_name[i] = full_name[i] + big_name + ' '
+                    big_name = ''
+                if(name.find(now_name['name']) != -1):
+                    if(len(now_name['name']) > len(big_name)):
+                        big_name = now_name['name']
+            full_name[i+1] = full_name[i+1] + big_name + ' '
+
 
 
 
@@ -57,21 +65,25 @@ def search_name(real_name) :
     for name_list2 in name_list:
         name_list3 = name_list2.split('_')
         for name in name_list3:
-            mysql_cursor.execute(sql_life, (name, ))
+            mysql_cursor.execute(sql_life)
             mysql_list = mysql_cursor.fetchall()
             mysql_cursor = mysql_con.cursor(dictionary=True)
 
-            if mysql_list == []:
-                continue
-            else:
+            i = 1
+            big_name = ''
+            for now_name in mysql_list:
+                if (now_name['life_3st_id'] != i):
+                    i = i + 1;
+                    full_name[i] = full_name[i] + big_name + ' '
+                    big_name = ''
+                if (name.find(now_name['name']) != -1):
+                    if (len(now_name['name']) > len(big_name)):
+                        big_name = now_name['name']
+            full_name[i + 1] = full_name[i + 1] + big_name + ' '
 
-                for now_name in mysql_list:
-                    now_id = now_name['life_3st_id']
-                    full_name[now_id] = full_name[now_id] + now_name['name'] + ' '
 
 
-
-    for i in range(1, 1102):
+    for i in range(1, 1103):
         if len(full_name[i]) > len(final_name):
             final_name = full_name[i]
             final_id = i
