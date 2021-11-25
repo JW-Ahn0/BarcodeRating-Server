@@ -29,8 +29,6 @@ def search_name(real_name) :
     final_name = ''
 
     full_name = [""] * 635
-
-
     for name_list2 in name_list :
         name_list3 = name_list2.split('_')
         for name in name_list3 :
@@ -42,9 +40,10 @@ def search_name(real_name) :
             big_name = ''
             for now_name in mysql_list:
                 if(now_name['food_3st_id'] != i):
-                    i = i + 1;
-                    full_name[i] = full_name[i] + big_name + ' '
+                    i = i + 1
                     big_name = ''
+                    full_name[i] = full_name[i] + big_name + ' '
+
                 if(name.find(now_name['name']) != -1):
                     if(len(now_name['name']) > len(big_name)):
                         big_name = now_name['name']
@@ -74,8 +73,8 @@ def search_name(real_name) :
             for now_name in mysql_list:
                 if (now_name['life_3st_id'] != i):
                     i = i + 1;
-                    full_name[i] = full_name[i] + big_name + ' '
                     big_name = ''
+                    full_name[i] = full_name[i] + big_name + ' '
                 if (name.find(now_name['name']) != -1):
                     if (len(now_name['name']) > len(big_name)):
                         big_name = now_name['name']
