@@ -28,7 +28,7 @@ def search_name(real_name) :
     final_id = '1'
     final_name = ''
 
-    full_name = [""] * 635
+    full_name = [" "] * 635
     for name_list2 in name_list :
         name_list3 = name_list2.split('_')
         for name in name_list3 :
@@ -60,7 +60,7 @@ def search_name(real_name) :
 
 
 
-    full_name = [""] * 1105
+    full_name = [" "] * 1105
     for name_list2 in name_list:
         name_list3 = name_list2.split('_')
         for name in name_list3:
