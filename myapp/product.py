@@ -172,7 +172,7 @@ def search_coupang(name):
     raw = req.text
     html = bf(raw, 'html.parser')
 
-    img = str(html.find('img', 'search-product-wrap-img')).split('src="')[2].split('"')[0]
+    img = str(html.find_all('img', 'search-product-wrap-img')[1]).split('src="')[2].split('"')[0]
     img = "https:" + img
     productlist = html.find_all('li', class_='search-product')
     check = 0
